@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTextStyle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_margin">@dimen/standard_padding</item>
+    </style>
+
+    <style name="AppTextStyleOfItem" parent="AppTextStyle">
+        <item name="android:layout_margin">0dp</item>
+        <item name="android:paddingStart">@dimen/standard_padding</item>
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <style name="AppTextStyle.Small" parent="AppTextStyleOfItem">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+</resources>

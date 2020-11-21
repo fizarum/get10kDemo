@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="user"
+            type="com.fizarum.get10kusd.domain.entities.User" />
+
+        <variable
+            name="daysToReachTheGoal"
+            type="Integer" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/standard_padding">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivAvatar"
+            android:layout_width="@dimen/small_preview_size"
+            android:layout_height="@dimen/small_preview_size"
+            android:contentDescription="@string/user_avatar"
+            app:avatarUrl="@{user.avatarUrl}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvFullName"
+            style="@style/AppTextStyleOfItem"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/standard_padding"
+            android:paddingEnd="0dp"
+            android:text="@{user.shortFullName}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivAvatar"
+            app:layout_constraintTop_toTopOf="@id/ivAvatar" />
+
+        <TextView
+            android:id="@+id/tvDailyWage"
+            style="@style/AppTextStyleOfItem"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{@string/daily_wage(user.dailyWage)}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivAvatar"
+            app:layout_constraintTop_toBottomOf="@id/tvFullName"
+            tools:text="Daily wage: 1000" />
+
+        <TextView
+            style="@style/AppTextStyle.Small"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{ @string/days_to_reach_the_goal(daysToReachTheGoal)}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivAvatar"
+            app:layout_constraintTop_toBottomOf="@id/tvDailyWage"
+            tools:text="Days to reach the goal: 400" />
+
+        <ImageView
+            android:id="@+id/ivEdit"
+            android:layout_width="@dimen/edit_control_size"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_baseline_edit"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
+

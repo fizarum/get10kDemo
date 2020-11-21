@@ -3,4 +3,8 @@
     <string name="daily_wage">Daily wage: %d</string>
     <string name="days_to_reach_the_goal">Days to reach the goal: %d</string>
     <string name="user_avatar">user avatar</string>
+    <string name="enter_new_daily_wage">Enter new daily wage\nfor user: %s</string>
+    <string name="daily_wage_hint">daily wage</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>

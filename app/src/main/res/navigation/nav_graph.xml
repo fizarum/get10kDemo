@@ -9,13 +9,17 @@
         android:id="@+id/userListFragment"
         android:name="com.fizarum.get10kusd.app.fragments.UserListFragment"
         android:label="fragment_user_list"
-        tools:layout="@layout/fragment_user_list" >
+        tools:layout="@layout/fragment_user_list">
         <action
-            android:id="@+id/action_userListFragment_to_editDailyWageDialog"
+            android:id="@+id/openEditDialog"
             app:destination="@id/editDailyWageDialog" />
     </fragment>
-    <fragment
+    <dialog
         android:id="@+id/editDailyWageDialog"
         android:name="com.fizarum.get10kusd.app.fragments.EditDailyWageDialog"
-        android:label="EditDailyWageDialog" />
+        android:label="EditDailyWageDialog">
+        <argument
+            android:name="user"
+            app:argType="com.fizarum.get10kusd.domain.entities.User" />
+    </dialog>
 </navigation>

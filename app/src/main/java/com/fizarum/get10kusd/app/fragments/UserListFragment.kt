@@ -7,9 +7,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.fizarum.get10kusd.app.adapters.EditUserClickListener
 import com.fizarum.get10kusd.app.adapters.UsersAdapter
 import com.fizarum.get10kusd.app.extensions.viewModelFactory
+import com.fizarum.get10kusd.app.viewmodels.EditDailyWageViewModel
 import com.fizarum.get10kusd.app.viewmodels.UserListViewModel
 import com.fizarum.get10kusd.data.repositories.UserRepositoryImpl
 import com.fizarum.get10kusd.data.rest.RestClient
@@ -20,7 +23,7 @@ import com.fizarum.get10kusd.domain.repositories.UserRepository
 import com.fizarum.get10kusd.domain.usecases.GetEstimatedDaysUseCase
 import com.fizarum.get10kusd.domain.usecases.GetUserListUseCase
 
-class UserListFragment : Fragment() {
+class UserListFragment : Fragment(), EditUserClickListener {
 
     private lateinit var binding: FragmentUserListBinding
 
@@ -31,8 +34,10 @@ class UserListFragment : Fragment() {
         UserListViewModel(getUserListUseCase, getEstimatedDaysUseCase)
     })
 
+    private val editDailyWageViewModel: EditDailyWageViewModel by activityViewModels()
+
     private val usersAdapter: UsersAdapter by lazy {
-        UsersAdapter(layoutInflater)
+        UsersAdapter(layoutInflater, this)
     }
 
     private val goalToGet10K = Goal(10000)
@@ -41,6 +46,12 @@ class UserListFragment : Fragment() {
         val sorted = viewModel.sortByDaysASC(list)
         val usersWithEstimatedDays = viewModel.estimatedDaysForUsers(sorted, goalToGet10K)
         usersAdapter.setUsersWithDays(usersWithEstimatedDays)
+    }
+
+    private val changedDailyWageObserver = Observer<User> {
+        it?.let { newUserData ->
+            viewModel.updateDailyWageForUser(newUserData)
+        }
     }
 
     override fun onCreateView(
@@ -64,6 +75,10 @@ class UserListFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         viewModel.userListLiveData.observe(viewLifecycleOwner, userListObserver)
+        editDailyWageViewModel.userWithNewDailyWage.observe(
+            viewLifecycleOwner,
+            changedDailyWageObserver
+        )
         viewModel.fetchUserList()
     }
 
@@ -71,5 +86,11 @@ class UserListFragment : Fragment() {
         super.onPause()
 
         viewModel.userListLiveData.removeObserver(userListObserver)
+        editDailyWageViewModel.userWithNewDailyWage.removeObserver(changedDailyWageObserver)
+    }
+
+    override fun onUserEditClicked(user: User) {
+        val action = UserListFragmentDirections.openEditDialog(user)
+        findNavController().navigate(action)
     }
 }

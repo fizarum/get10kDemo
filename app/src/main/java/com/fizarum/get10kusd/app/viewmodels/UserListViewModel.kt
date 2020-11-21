@@ -14,7 +14,7 @@ class UserListViewModel(
 ) :
     BaseViewModel(getUsersUseCase, getEstimatedDaysUseCase) {
 
-    private val internalUserList = MutableLiveData<List<User>>(emptyList())
+    private val internalUserList = MutableLiveData<MutableList<User>>(mutableListOf())
 
     val userListLiveData: LiveData<List<User>> = Transformations.map(internalUserList) {
         it
@@ -23,9 +23,9 @@ class UserListViewModel(
     fun fetchUserList() {
         getUsersUseCase.execute(
             onSuccess = { list ->
-                internalUserList.value = list
+                internalUserList.value = list.toMutableList()
             },
-            onError = { internalUserList.value = emptyList() },
+            onError = { internalUserList.value = mutableListOf() },
             onFinished = {},
             params = null
         )
@@ -44,6 +44,14 @@ class UserListViewModel(
         return users.map { user ->
             val params = GetEstimatedDaysUseCase.Params(user, goal)
             user to getEstimatedDaysUseCase.execute(params)
+        }
+    }
+
+    fun updateDailyWageForUser(user: User) {
+        val oldUser = internalUserList.value?.find { savedUser -> savedUser.id == user.id }
+        internalUserList.value = internalUserList.value?.apply {
+            remove(oldUser)
+            add(user)
         }
     }
 }

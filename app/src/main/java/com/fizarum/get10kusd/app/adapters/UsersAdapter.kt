@@ -6,7 +6,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.fizarum.get10kusd.databinding.ItemUserBinding
 import com.fizarum.get10kusd.domain.entities.User
 
-class UsersAdapter(private val layoutInflater: LayoutInflater) :
+class UsersAdapter(
+    private val layoutInflater: LayoutInflater,
+    private val listener: EditUserClickListener
+) :
     RecyclerView.Adapter<UserItemVH>() {
 
     private var users: List<Pair<User, Int>> = emptyList()
@@ -25,6 +28,10 @@ class UsersAdapter(private val layoutInflater: LayoutInflater) :
         users[position].let { (user, days) ->
             holder.itemBinding.user = user
             holder.itemBinding.daysToReachTheGoal = days
+
+            holder.itemBinding.ivEdit.setOnClickListener {
+                listener.onUserEditClicked(user)
+            }
         }
     }
 

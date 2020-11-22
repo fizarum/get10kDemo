@@ -30,7 +30,7 @@ class UsersAdapter(
             holder.itemBinding.daysToReachTheGoal = days
 
             holder.itemBinding.ivEdit.setOnClickListener {
-                listener.onUserEditClicked(user)
+                listener.onUserEditInitiated(user)
             }
         }
     }

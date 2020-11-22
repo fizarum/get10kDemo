@@ -1,31 +1,74 @@
 package com.fizarum.get10kusd.app.viewmodels
 
-import androidx.lifecycle.LiveData
+import android.util.Log
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import com.fizarum.get10kusd.domain.entities.Goal
 import com.fizarum.get10kusd.domain.entities.User
 import com.fizarum.get10kusd.domain.usecases.GetEstimatedDaysUseCase
 import com.fizarum.get10kusd.domain.usecases.GetUserListUseCase
+import com.fizarum.get10kusd.domain.usecases.LoadDailyWagesUseCase
+import com.fizarum.get10kusd.domain.usecases.SaveDailyWageUseCase
 
 class UserListViewModel(
     private val getUsersUseCase: GetUserListUseCase,
-    private val getEstimatedDaysUseCase: GetEstimatedDaysUseCase
+    private val getEstimatedDaysUseCase: GetEstimatedDaysUseCase,
+    private val saveDailyWageUseCase: SaveDailyWageUseCase,
+    private val loadDailyWagesUseCase: LoadDailyWagesUseCase
 ) :
-    BaseViewModel(getUsersUseCase, getEstimatedDaysUseCase) {
+    BaseViewModel(
+        getUsersUseCase,
+        getEstimatedDaysUseCase,
+        saveDailyWageUseCase,
+        loadDailyWagesUseCase
+    ) {
 
-    private val internalUserList = MutableLiveData<MutableList<User>>(mutableListOf())
+    private val internalFetchedUserList = MutableLiveData<List<User>>()
+    private val internalSavedUserList = MutableLiveData<List<User>>()
 
-    val userListLiveData: LiveData<List<User>> = Transformations.map(internalUserList) {
-        it
+    val usersList = MediatorLiveData<MutableList<User>>()
+
+    init {
+        usersList.addSource(internalSavedUserList) { savedList ->
+            if (usersList.value.isNullOrEmpty()) {
+                usersList.value = savedList.toMutableList()
+            } else {
+                savedList.forEach { savedUser ->
+                    replaceUserWithUpdatedDailyWage(savedUser)
+                }
+                usersList.value = usersList.value
+            }
+        }
+        usersList.addSource(internalFetchedUserList) { fetchedList ->
+            fetchedList?.forEach { fetchedUser ->
+                replaceUserWithUpdatedRestInfo(fetchedUser)
+            }
+            usersList.value = usersList.value
+        }
     }
 
     fun fetchUserList() {
+        //load from db
+        loadDailyWagesUseCase.execute(
+            onSuccess = { savedList ->
+                internalSavedUserList.value = savedList
+            },
+            onError = { t ->
+                Log.e("TAG", "cant load saved users: ${t.localizedMessage}")
+                internalSavedUserList.value = emptyList()
+            },
+            onFinished = {},
+            params = null
+        )
+        //fetch from rest api
         getUsersUseCase.execute(
             onSuccess = { list ->
-                internalUserList.value = list.toMutableList()
+                internalFetchedUserList.value = list.toMutableList()
             },
-            onError = { internalUserList.value = mutableListOf() },
+            onError = { t ->
+                Log.e("TAG", "cant fetch users: ${t.localizedMessage}")
+                internalFetchedUserList.value = mutableListOf()
+            },
             onFinished = {},
             params = null
         )
@@ -47,11 +90,50 @@ class UserListViewModel(
         }
     }
 
+    //todo: remove saving user on edit mode enter!
     fun updateDailyWageForUser(user: User) {
-        val oldUser = internalUserList.value?.find { savedUser -> savedUser.id == user.id }
-        internalUserList.value = internalUserList.value?.apply {
-            remove(oldUser)
-            add(user)
+        findUser(user.id)?.let { oldUser ->
+            usersList.value = usersList.value?.apply {
+                replaceUser(oldUser, user)
+            }
         }
+
+        saveDailyWageUseCase.execute(
+            onComplete = {
+                Log.d("TAG", "user has been saved to db")
+            },
+            onError = { t ->
+                Log.e("TAG", "cant save user to db: ${t.localizedMessage}")
+            },
+            onFinished = {},
+            params = user
+        )
+    }
+
+    private fun findUser(id: String) = usersList.value?.find { savedUser -> savedUser.id == id }
+
+    private fun replaceUser(oldUser: User, newUser: User) {
+        usersList.value?.remove(oldUser)
+        usersList.value?.add(newUser)
+    }
+
+    private fun replaceUserWithUpdatedDailyWage(userWithActualDailyWage: User) {
+        findUser(userWithActualDailyWage.id)?.let { oldUser ->
+            val newUser = oldUser.copy(dailyWage = userWithActualDailyWage.dailyWage)
+            replaceUser(oldUser, newUser)
+        }
+    }
+
+    private fun replaceUserWithUpdatedRestInfo(userWithActualRestInfo: User) {
+        findUser(userWithActualRestInfo.id)?.let { oldUser ->
+            val newUser = oldUser.copy(
+                name = userWithActualRestInfo.name,
+                lastName = userWithActualRestInfo.lastName,
+                avatarUrl = userWithActualRestInfo.avatarUrl
+            )
+            replaceUser(oldUser, newUser)
+            return
+        }
+        usersList.value?.add(userWithActualRestInfo)
     }
 }

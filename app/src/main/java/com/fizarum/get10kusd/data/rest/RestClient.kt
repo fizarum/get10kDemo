@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RestClient {
 
-    private val baseUrl = "http://www.mocky.io/v2/"
+    private const val baseUrl = "http://www.mocky.io/v2/"
 
     private val loggingInterceptor = with(HttpLoggingInterceptor()) {
         level = HttpLoggingInterceptor.Level.BODY

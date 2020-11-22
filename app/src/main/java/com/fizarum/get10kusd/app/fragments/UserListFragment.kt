@@ -14,6 +14,7 @@ import com.fizarum.get10kusd.app.adapters.UsersAdapter
 import com.fizarum.get10kusd.app.extensions.viewModelFactory
 import com.fizarum.get10kusd.app.viewmodels.EditDailyWageViewModel
 import com.fizarum.get10kusd.app.viewmodels.UserListViewModel
+import com.fizarum.get10kusd.data.db.AppDatabase
 import com.fizarum.get10kusd.data.repositories.UserRepositoryImpl
 import com.fizarum.get10kusd.data.rest.RestClient
 import com.fizarum.get10kusd.databinding.FragmentUserListBinding
@@ -22,16 +23,29 @@ import com.fizarum.get10kusd.domain.entities.User
 import com.fizarum.get10kusd.domain.repositories.UserRepository
 import com.fizarum.get10kusd.domain.usecases.GetEstimatedDaysUseCase
 import com.fizarum.get10kusd.domain.usecases.GetUserListUseCase
+import com.fizarum.get10kusd.domain.usecases.LoadDailyWagesUseCase
+import com.fizarum.get10kusd.domain.usecases.SaveDailyWageUseCase
 
 class UserListFragment : Fragment(), EditUserClickListener {
 
     private lateinit var binding: FragmentUserListBinding
 
+    private val db: AppDatabase by lazy {
+        AppDatabase.getInstance(requireContext().applicationContext)
+    }
+
     private val viewModel: UserListViewModel by activityViewModels(factoryProducer = viewModelFactory {
-        val repo: UserRepository = UserRepositoryImpl(RestClient)
+        val repo: UserRepository = UserRepositoryImpl(RestClient, db)
         val getUserListUseCase = GetUserListUseCase(repo)
         val getEstimatedDaysUseCase = GetEstimatedDaysUseCase()
-        UserListViewModel(getUserListUseCase, getEstimatedDaysUseCase)
+        val saveDailyWageUseCase = SaveDailyWageUseCase(repo)
+        val loadDailyWageUseCase = LoadDailyWagesUseCase(repo)
+        UserListViewModel(
+            getUserListUseCase,
+            getEstimatedDaysUseCase,
+            saveDailyWageUseCase,
+            loadDailyWageUseCase
+        )
     })
 
     private val editDailyWageViewModel: EditDailyWageViewModel by activityViewModels()
@@ -74,23 +88,31 @@ class UserListFragment : Fragment(), EditUserClickListener {
 
     override fun onResume() {
         super.onResume()
-        viewModel.userListLiveData.observe(viewLifecycleOwner, userListObserver)
-        editDailyWageViewModel.userWithNewDailyWage.observe(
-            viewLifecycleOwner,
-            changedDailyWageObserver
-        )
+        subscribeOnLiveData()
         viewModel.fetchUserList()
     }
 
     override fun onPause() {
         super.onPause()
-
-        viewModel.userListLiveData.removeObserver(userListObserver)
-        editDailyWageViewModel.userWithNewDailyWage.removeObserver(changedDailyWageObserver)
+        unsubscribeFromLiveData()
     }
 
-    override fun onUserEditClicked(user: User) {
+    override fun onUserEditInitiated(user: User) {
+        editDailyWageViewModel.cleanUpDailyWageValue()
         val action = UserListFragmentDirections.openEditDialog(user)
         findNavController().navigate(action)
+    }
+
+
+    private fun subscribeOnLiveData() {
+        with(viewLifecycleOwner) {
+            viewModel.usersList.observe(this, userListObserver)
+            editDailyWageViewModel.userWithNewDailyWage.observe(this, changedDailyWageObserver)
+        }
+    }
+
+    private fun unsubscribeFromLiveData() {
+        viewModel.usersList.removeObserver(userListObserver)
+        editDailyWageViewModel.userWithNewDailyWage.removeObserver(changedDailyWageObserver)
     }
 }

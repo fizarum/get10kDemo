@@ -1,13 +1,15 @@
 package com.fizarum.get10kusd.data.repositories
 
 import com.fizarum.get10kusd.data.adapters.UserAdapter
+import com.fizarum.get10kusd.data.db.AppDatabase
 import com.fizarum.get10kusd.data.rest.RestClient
 import com.fizarum.get10kusd.data.rest.UsersService
 import com.fizarum.get10kusd.domain.entities.User
 import com.fizarum.get10kusd.domain.repositories.UserRepository
+import io.reactivex.Completable
 import io.reactivex.Single
 
-class UserRepositoryImpl(restClient: RestClient): UserRepository {
+class UserRepositoryImpl(restClient: RestClient, private val db: AppDatabase) : UserRepository {
 
     private val userService = restClient.retrofit.create(UsersService::class.java)
 
@@ -16,6 +18,26 @@ class UserRepositoryImpl(restClient: RestClient): UserRepository {
             response.list.map { userDTO ->
                 UserAdapter.fromDTO(userDTO)
             }
+        }
+    }
+
+    override fun saveUser(user: User): Completable {
+        return with(UserAdapter.toDBEntity(user)) {
+            db.dailyWageDao().insert(this)
+        }
+    }
+
+    override fun loadAllUsers(): Single<List<User>> {
+        return db.dailyWageDao().getAll().map { dbList ->
+            dbList.map { entity ->
+                UserAdapter.fromDBEntity(entity)
+            }
+        }
+    }
+
+    override fun loadUser(id: String): Single<User> {
+        return db.dailyWageDao().getById(id).map {
+            UserAdapter.fromDBEntity(it)
         }
     }
 }

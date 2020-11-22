@@ -23,21 +23,15 @@ class UserRepositoryImpl(restClient: RestClient, private val db: AppDatabase) : 
 
     override fun saveUser(user: User): Completable {
         return with(UserAdapter.toDBEntity(user)) {
-            db.dailyWageDao().insert(this)
+            db.userDao().insert(this)
         }
     }
 
     override fun loadAllUsers(): Single<List<User>> {
-        return db.dailyWageDao().getAll().map { dbList ->
+        return db.userDao().getAll().map { dbList ->
             dbList.map { entity ->
                 UserAdapter.fromDBEntity(entity)
             }
-        }
-    }
-
-    override fun loadUser(id: String): Single<User> {
-        return db.dailyWageDao().getById(id).map {
-            UserAdapter.fromDBEntity(it)
         }
     }
 }

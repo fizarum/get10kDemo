@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="@{ @string/enter_new_daily_wage(viewModel.userWithNewDailyWage.shortFullName)}"
+            android:text="@{ @string/enter_new_daily_wage(viewModel.userToShow.shortFullName)}"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.textfield.TextInputLayout

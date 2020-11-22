@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.fizarum.get10kusd.data.db.dao.DailyWageDao
+import com.fizarum.get10kusd.data.db.dao.UserDao
 import com.fizarum.get10kusd.data.db.entities.UserEntity
 
 @Database(
@@ -14,7 +14,7 @@ import com.fizarum.get10kusd.data.db.entities.UserEntity
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun dailyWageDao(): DailyWageDao
+    abstract fun userDao(): UserDao
 
     companion object {
 

@@ -32,7 +32,7 @@ class EditDailyWageDialog : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.userWithNewDailyWage.value = args.user
+        viewModel.userToShow.value = args.user
 
         binding.btCancel.setOnClickListener {
             dismiss()

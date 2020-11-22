@@ -7,15 +7,17 @@ class EditDailyWageViewModel : BaseViewModel() {
 
     val dailyWageValue = MutableLiveData<String>()
 
+    val userToShow = MutableLiveData<User>()
     val userWithNewDailyWage = MutableLiveData<User>()
 
     fun cleanUpDailyWageValue() {
         dailyWageValue.value = null
+        userWithNewDailyWage.value = null
     }
 
     fun saveDailyWage() {
         dailyWageValue.value?.toIntOrNull()?.let { newDailyWage ->
-            userWithNewDailyWage.value = userWithNewDailyWage.value?.copy(dailyWage = newDailyWage)
+            userWithNewDailyWage.value = userToShow.value?.copy(dailyWage = newDailyWage)
         }
     }
 }

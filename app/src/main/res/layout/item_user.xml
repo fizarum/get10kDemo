@@ -66,6 +66,7 @@
             android:id="@+id/ivEdit"
             android:layout_width="@dimen/edit_control_size"
             android:layout_height="0dp"
+            android:contentDescription="@string/edit"
             android:src="@drawable/ic_baseline_edit"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

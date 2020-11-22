@@ -8,8 +8,8 @@ import org.junit.Test
 
 class EstimatedDaysInstrumentedTest {
 
-    private val JohnWick = User("id0", "John", "Wick", "", 40)
-    private val CameronDiaz = User("id1", "Cameron", "Diaz", "", 15)
+    private val userJohnWick = User("id0", "John", "Wick", "", 40)
+    private val userCameronDiaz = User("id1", "Cameron", "Diaz", "", 15)
 
     private val goal10K = Goal(10000)
 
@@ -17,7 +17,7 @@ class EstimatedDaysInstrumentedTest {
     fun is10KEstimationForJohnWick_isCorrect() {
         val getEstimationUseCase = GetEstimatedDaysUseCase()
 
-        val params = GetEstimatedDaysUseCase.Params(JohnWick, goal10K)
+        val params = GetEstimatedDaysUseCase.Params(userJohnWick, goal10K)
         val estimatedDays = getEstimationUseCase.execute(params)
 
         Assert.assertEquals(250, estimatedDays)
@@ -27,7 +27,7 @@ class EstimatedDaysInstrumentedTest {
     fun is10KEstimationForCameronDiaz_isCorrect() {
         val getEstimationUseCase = GetEstimatedDaysUseCase()
 
-        val params = GetEstimatedDaysUseCase.Params(CameronDiaz, goal10K)
+        val params = GetEstimatedDaysUseCase.Params(userCameronDiaz, goal10K)
         val estimatedDays = getEstimationUseCase.execute(params)
 
         Assert.assertEquals(667, estimatedDays)

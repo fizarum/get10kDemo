@@ -9,6 +9,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.fizarum.get10kusd.app.adapters.EditUserClickListener
 import com.fizarum.get10kusd.app.adapters.UsersAdapter
 import com.fizarum.get10kusd.app.extensions.viewModelFactory
@@ -25,8 +26,13 @@ import com.fizarum.get10kusd.domain.usecases.GetEstimatedDaysUseCase
 import com.fizarum.get10kusd.domain.usecases.GetUserListUseCase
 import com.fizarum.get10kusd.domain.usecases.LoadDailyWagesUseCase
 import com.fizarum.get10kusd.domain.usecases.SaveDailyWageUseCase
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.TimeUnit
 
-class UserListFragment : Fragment(), EditUserClickListener {
+class UserListFragment : Fragment(), EditUserClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private lateinit var binding: FragmentUserListBinding
 
@@ -49,6 +55,7 @@ class UserListFragment : Fragment(), EditUserClickListener {
     })
 
     private val editDailyWageViewModel: EditDailyWageViewModel by activityViewModels()
+    private var refreshTimeoutDisposable: Disposable? = null
 
     private val usersAdapter: UsersAdapter by lazy {
         UsersAdapter(layoutInflater, this)
@@ -57,9 +64,13 @@ class UserListFragment : Fragment(), EditUserClickListener {
     private val goalToGet10K = Goal(10000)
 
     private val userListObserver = Observer<List<User>> { list ->
-        val sorted = viewModel.sortByDaysASC(list)
-        val usersWithEstimatedDays = viewModel.estimatedDaysForUsers(sorted, goalToGet10K)
-        usersAdapter.setUsersWithDays(usersWithEstimatedDays)
+        stopRefreshingSwipe()
+        //check if at least first user has valid information
+        if (viewModel.mayListBeShown(list)) {
+            val sorted = viewModel.sortByDaysASC(list)
+            val usersWithEstimatedDays = viewModel.estimatedDaysForUsers(sorted, goalToGet10K)
+            usersAdapter.setUsersWithDays(usersWithEstimatedDays)
+        }
     }
 
     private val changedDailyWageObserver = Observer<User> {
@@ -74,6 +85,7 @@ class UserListFragment : Fragment(), EditUserClickListener {
     ): View? {
         binding = FragmentUserListBinding.inflate(layoutInflater)
         binding.lifecycleOwner = this
+        binding.viewModel = viewModel
 
         return binding.root
     }
@@ -84,6 +96,7 @@ class UserListFragment : Fragment(), EditUserClickListener {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = usersAdapter
         }
+        binding.srRefreshLayout.setOnRefreshListener(this)
     }
 
     override fun onResume() {
@@ -95,6 +108,7 @@ class UserListFragment : Fragment(), EditUserClickListener {
     override fun onPause() {
         super.onPause()
         unsubscribeFromLiveData()
+        stopRefreshingSwipe()
     }
 
     override fun onUserEditInitiated(user: User) {
@@ -103,6 +117,18 @@ class UserListFragment : Fragment(), EditUserClickListener {
         findNavController().navigate(action)
     }
 
+    override fun onRefresh() {
+        refreshTimeoutDisposable = Observable.timer(REFRESH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    stopRefreshingSwipe()
+                }, {
+                    stopRefreshingSwipe()
+                })
+        viewModel.fetchUserList()
+    }
 
     private fun subscribeOnLiveData() {
         with(viewLifecycleOwner) {
@@ -114,5 +140,16 @@ class UserListFragment : Fragment(), EditUserClickListener {
     private fun unsubscribeFromLiveData() {
         viewModel.usersList.removeObserver(userListObserver)
         editDailyWageViewModel.userWithNewDailyWage.removeObserver(changedDailyWageObserver)
+    }
+
+    private fun stopRefreshingSwipe() {
+        if (refreshTimeoutDisposable != null && refreshTimeoutDisposable?.isDisposed == false) {
+            refreshTimeoutDisposable?.dispose()
+        }
+        binding.srRefreshLayout.isRefreshing = false
+    }
+
+    companion object {
+        const val REFRESH_TIMEOUT_SECONDS = 4L
     }
 }

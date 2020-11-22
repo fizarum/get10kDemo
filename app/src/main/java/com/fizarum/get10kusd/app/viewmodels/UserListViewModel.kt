@@ -1,8 +1,10 @@
 package com.fizarum.get10kusd.app.viewmodels
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import com.fizarum.get10kusd.domain.entities.Goal
 import com.fizarum.get10kusd.domain.entities.User
 import com.fizarum.get10kusd.domain.usecases.GetEstimatedDaysUseCase
@@ -27,6 +29,9 @@ class UserListViewModel(
     private val internalSavedUserList = MutableLiveData<List<User>>()
 
     val usersList = MediatorLiveData<MutableList<User>>()
+    val showUserList: LiveData<Boolean> = Transformations.map(usersList) { list ->
+        mayListBeShown(list)
+    }
 
     init {
         usersList.addSource(internalSavedUserList) { savedList ->
@@ -39,6 +44,7 @@ class UserListViewModel(
                 usersList.value = usersList.value
             }
         }
+
         usersList.addSource(internalFetchedUserList) { fetchedList ->
             fetchedList?.forEach { fetchedUser ->
                 replaceUserWithUpdatedRestInfo(fetchedUser)
@@ -90,7 +96,6 @@ class UserListViewModel(
         }
     }
 
-    //todo: remove saving user on edit mode enter!
     fun updateDailyWageForUser(user: User) {
         findUser(user.id)?.let { oldUser ->
             usersList.value = usersList.value?.apply {
@@ -108,6 +113,10 @@ class UserListViewModel(
             onFinished = {},
             params = user
         )
+    }
+
+    fun mayListBeShown(list: List<User>?): Boolean {
+        return list != null && list.isNotEmpty() && list.first().hasAllInformation()
     }
 
     private fun findUser(id: String) = usersList.value?.find { savedUser -> savedUser.id == id }

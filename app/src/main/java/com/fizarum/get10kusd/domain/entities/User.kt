@@ -18,4 +18,6 @@ data class User(
 
     @IgnoredOnParcel
     val shortFullName = "${shortName}. $lastName"
+
+    fun hasAllInformation() = name.isNotEmpty() && lastName.isNotEmpty() && avatarUrl.isNotEmpty()
 }

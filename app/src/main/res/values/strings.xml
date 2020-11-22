@@ -8,4 +8,5 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="edit">Edit</string>
+    <string name="swipe_to_refresh_message">Can not fetch data from server.\nMake sure you have a connection.\nPerform swipe to refresh data</string>
 </resources>
